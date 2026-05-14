@@ -1,0 +1,27 @@
+
+/* The 'Global Reset' - This clears everything */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html{
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  /*background-color: #000; /* Optional: set your default background */
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #fff;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
