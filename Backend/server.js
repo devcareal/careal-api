@@ -97,10 +97,10 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(clientDist));
 
   // Any non-/api route returns index.html so React Router works on hard refresh
-  // e.g. refreshing /dashboard, /services, /add-vehicle all work correctly
-  app.get('/*', (req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
+app.use((req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
+});
+
 
 } else {
   // Development: simple root response (Vite dev server handles the frontend)
