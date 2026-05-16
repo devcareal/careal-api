@@ -91,7 +91,7 @@ app.get('/api/health', (req, res) => {
 // Single host on Render: Express serves the Vite build AND handles all API routes
 // Separate host later:   Remove this block; frontend lives on its own Render service
 if (process.env.NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, 'client', 'dist');
+  const clientDist = path.join(__dirname, '../client/dist');
 
   // Serve static assets (JS, CSS, images)
   app.use(express.static(clientDist));
