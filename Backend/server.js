@@ -98,7 +98,7 @@ if (process.env.NODE_ENV === 'production') {
 
   // Any non-/api route returns index.html so React Router works on hard refresh
   // e.g. refreshing /dashboard, /services, /add-vehicle all work correctly
-  app.get('*', (req, res) => {
+  app.get('/*', (req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 
