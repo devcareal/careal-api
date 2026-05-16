@@ -1,4 +1,7 @@
-.env 
-.env* 
-node_modules/ 
-*.log 
+# .gitignore
+.env
+.env.local
+.env.development
+.env*.local
+node_modules/
+*.log
