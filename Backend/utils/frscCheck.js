@@ -1,43 +1,69 @@
 // utils/frscCheck.js
 import puppeteer from "puppeteer";
+import fs from "fs";
+
+// Finds Chromium on both local machines and Render's Ubuntu environment
+function findChromium() {
+  const candidates = [
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+    "/snap/bin/chromium",
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      console.log("Found system Chromium at:", p);
+      return p;
+    }
+  }
+  // Fall back to Puppeteer's own bundled Chromium
+  console.log("No system Chromium found — using Puppeteer bundled Chromium");
+  return undefined;
+}
 
 export const frscVerify = async (plate) => {
   let browser;
   try {
     const url = "https://nvis.frsc.gov.ng/VehicleManagement/VerifyPlateNo";
 
-    browser = await puppeteer.launch({
-      headless: true,
+    const launchOptions = {
+      headless: "new",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",  // ✅ critical: Render's /dev/shm is only 64MB
-        "--disable-gpu",            // ✅ no GPU in Render containers
-        "--no-zygote",              // ✅ avoids zygote process issues in containers
-        "--single-process",         // ✅ Render free tier needs single-process mode
+        "--disable-dev-shm-usage",   // critical for Render — /dev/shm is only 64MB
+        "--disable-gpu",
+        "--no-zygote",
+        "--single-process",
+        "--disable-extensions",
       ],
-    });
+    };
+
+    const chromiumPath = findChromium();
+    if (chromiumPath) {
+      launchOptions.executablePath = chromiumPath;
+    }
+
+    browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
 
-    // Set real user-agent so FRSC portal doesn't block headless browser
+    // Real user-agent prevents FRSC from blocking headless requests
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
 
-    await page.goto(url, { waitUntil: "networkidle2" });
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
-    // Fill in the plate number — identical to original
     await page.type('input[name="plateNumber"]', plate);
 
-    // Submit the form — identical to original
     await Promise.all([
       page.click('button.find-car'),
-      page.waitForNavigation({ waitUntil: "networkidle2" }),
+      page.waitForNavigation({ waitUntil: "networkidle2", timeout: 30000 }),
     ]);
 
-    // Extract all visible text — identical to original
     const resultText = await page.evaluate(() => {
       return document.body.innerText.toLowerCase();
     });
@@ -47,14 +73,12 @@ export const frscVerify = async (plate) => {
 
     console.log("Parsed FRSC result text:", resultText);
 
-    // Extract vehicle details — identical to original
     const makeMatch  = resultText.match(/vehicle make\s+(.*)/);
     const colorMatch = resultText.match(/vehicle color\s+(.*)/);
 
     const vehicleMake  = makeMatch  ? makeMatch[1].trim()  : null;
     const vehicleColor = colorMatch ? colorMatch[1].trim() : null;
 
-    // Return logic — identical to original
     if (resultText.includes("valid and assigned")) {
       return {
         status:  "VALID",
@@ -72,12 +96,9 @@ export const frscVerify = async (plate) => {
 
   } catch (err) {
     console.error("FRSC check error:", err.message);
-
-    // Always close browser if it opened before the error
     if (browser) {
       try { await browser.close(); } catch (_) {}
     }
-
     return { status: "ERROR", message: "Failed to reach FRSC portal" };
   }
 };
