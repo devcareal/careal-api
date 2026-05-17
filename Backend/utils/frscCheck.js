@@ -1,84 +1,102 @@
 // utils/frscCheck.js
-import puppeteer from "puppeteer";
-import fs from "fs";
+// ─────────────────────────────────────────────────────────────────────────────
+// Uses axios + cheerio to query the FRSC portal directly — no Puppeteer/Chrome.
+// This works on Render's free tier which cannot reliably run a headless browser.
+// ─────────────────────────────────────────────────────────────────────────────
+import axios from "axios";
+import * as cheerio from "cheerio";
 
-// Finds Chromium on both local machines and Render's Ubuntu environment
-function findChromium() {
-  const candidates = [
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/chromium",
-    "/snap/bin/chromium",
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      console.log("Found system Chromium at:", p);
-      return p;
-    }
-  }
-  // Fall back to Puppeteer's own bundled Chromium
-  console.log("No system Chromium found — using Puppeteer bundled Chromium");
-  return undefined;
-}
+const FRSC_URL = "https://nvis.frsc.gov.ng/VehicleManagement/VerifyPlateNo";
+
+// Some servers block requests without a real browser user-agent
+const HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Content-Type":    "application/x-www-form-urlencoded",
+  "Referer":         FRSC_URL,
+  "Origin":          "https://nvis.frsc.gov.ng",
+};
 
 export const frscVerify = async (plate) => {
-  let browser;
   try {
-    const url = "https://nvis.frsc.gov.ng/VehicleManagement/VerifyPlateNo";
-
-    const launchOptions = {
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",   // critical for Render — /dev/shm is only 64MB
-        "--disable-gpu",
-        "--no-zygote",
-        "--single-process",
-        "--disable-extensions",
-      ],
-    };
-
-    const chromiumPath = findChromium();
-    if (chromiumPath) {
-      launchOptions.executablePath = chromiumPath;
-    }
-
-    browser = await puppeteer.launch(launchOptions);
-
-    const page = await browser.newPage();
-
-    // Real user-agent prevents FRSC from blocking headless requests
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    );
-
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
-
-    await page.type('input[name="plateNumber"]', plate);
-
-    await Promise.all([
-      page.click('button.find-car'),
-      page.waitForNavigation({ waitUntil: "networkidle2", timeout: 30000 }),
-    ]);
-
-    const resultText = await page.evaluate(() => {
-      return document.body.innerText.toLowerCase();
+    // ── Step 1: GET the page to grab any CSRF token / hidden fields ───────────
+    const getRes = await axios.get(FRSC_URL, {
+      headers: { ...HEADERS, "Content-Type": "text/html" },
+      timeout: 20000,
+      // Keep cookies between requests
+      withCredentials: true,
     });
 
-    await browser.close();
-    browser = null;
+    const $get = cheerio.load(getRes.data);
 
-    console.log("Parsed FRSC result text:", resultText);
+    // Extract hidden form fields (CSRF tokens, view state, etc.)
+    const hiddenFields = {};
+    $get('form input[type="hidden"]').each((_, el) => {
+      const name  = $get(el).attr("name");
+      const value = $get(el).attr("value") || "";
+      if (name) hiddenFields[name] = value;
+    });
 
-    const makeMatch  = resultText.match(/vehicle make\s+(.*)/);
-    const colorMatch = resultText.match(/vehicle color\s+(.*)/);
+    // Get cookies from the GET request to send back
+    const cookies = getRes.headers["set-cookie"]
+      ? getRes.headers["set-cookie"].map(c => c.split(";")[0]).join("; ")
+      : "";
 
-    const vehicleMake  = makeMatch  ? makeMatch[1].trim()  : null;
-    const vehicleColor = colorMatch ? colorMatch[1].trim() : null;
+    console.log("FRSC hidden fields found:", Object.keys(hiddenFields));
 
+    // ── Step 2: POST the form with the plate number ───────────────────────────
+    const formData = new URLSearchParams({
+      ...hiddenFields,
+      plateNumber: plate,
+    });
+
+    const postRes = await axios.post(FRSC_URL, formData.toString(), {
+      headers: {
+        ...HEADERS,
+        "Cookie": cookies,
+      },
+      timeout: 20000,
+      maxRedirects: 5,
+    });
+
+    const $post = cheerio.load(postRes.data);
+
+    // Get all visible text from the response page
+    const resultText = $post("body").text().toLowerCase().replace(/\s+/g, " ").trim();
+
+    console.log("FRSC response text (first 300 chars):", resultText.substring(0, 300));
+
+    // Extract vehicle details using cheerio selectors first, then regex fallback
+    let vehicleMake  = null;
+    let vehicleColor = null;
+
+    // Try to find details in table cells or labeled fields
+    $post("td, th, label, span, div, p").each((_, el) => {
+      const text = $post(el).text().trim().toLowerCase();
+      if (text.includes("vehicle make") || text.includes("make:")) {
+        const next = $post(el).next().text().trim();
+        if (next) vehicleMake = next;
+      }
+      if (text.includes("vehicle colour") || text.includes("vehicle color") || text.includes("colour:") || text.includes("color:")) {
+        const next = $post(el).next().text().trim();
+        if (next) vehicleColor = next;
+      }
+    });
+
+    // Regex fallback if cheerio selectors didn't find them
+    if (!vehicleMake) {
+      const m = resultText.match(/vehicle make[:\s]+([a-z0-9\s]+?)(?:\s{2,}|\n|$)/);
+      if (m) vehicleMake = m[1].trim();
+    }
+    if (!vehicleColor) {
+      const m = resultText.match(/vehicle colo(?:u)?r[:\s]+([a-z0-9\s]+?)(?:\s{2,}|\n|$)/);
+      if (m) vehicleColor = m[1].trim();
+    }
+
+    // ── Interpret result ──────────────────────────────────────────────────────
     if (resultText.includes("valid and assigned")) {
       return {
         status:  "VALID",
@@ -86,19 +104,39 @@ export const frscVerify = async (plate) => {
         make:    vehicleMake,
         color:   vehicleColor,
       };
-    } else if (resultText.includes("not found")) {
-      return { status: "NOT FOUND", message: "Plate number not found in registry" };
-    } else if (resultText.includes("plate number is required")) {
-      return { status: "INVALID", message: "No plate number submitted" };
+    } else if (resultText.includes("not found") || resultText.includes("no record")) {
+      return {
+        status:  "NOT FOUND",
+        message: "Plate number not found in FRSC registry",
+      };
+    } else if (resultText.includes("plate number is required") || resultText.includes("invalid plate")) {
+      return {
+        status:  "INVALID",
+        message: "Invalid plate number format",
+      };
     } else {
-      return { status: "UNKNOWN", message: "Unable to confirm vehicle status" };
+      // We got a response but couldn't interpret it
+      console.log("FRSC full response text:", resultText.substring(0, 500));
+      return {
+        status:  "UNKNOWN",
+        message: "Unable to confirm vehicle status from FRSC portal",
+      };
     }
 
   } catch (err) {
     console.error("FRSC check error:", err.message);
-    if (browser) {
-      try { await browser.close(); } catch (_) {}
+
+    // Distinguish network errors from parse errors
+    if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND" || err.code === "ETIMEDOUT") {
+      return {
+        status:  "ERROR",
+        message: "FRSC portal is currently unreachable. Please try again later.",
+      };
     }
-    return { status: "ERROR", message: "Failed to reach FRSC portal" };
+
+    return {
+      status:  "ERROR",
+      message: "Failed to verify plate number. Please try again.",
+    };
   }
 };
