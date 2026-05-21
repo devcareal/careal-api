@@ -13,6 +13,8 @@ import Dashboard from "./components/pages/Dashboard";
 import PaymentVerify from "./components/pages/PaymentVerify";
 import AddVehicle from "./components/pages/AddVehicle";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import TermsOfUse from "./components/pages/TermsOfUse.jsx";
+import PrivacyPolicy from "./components/pages/PrivacyPolicy.jsx";
 import Footer from "./components/Footer";
 import './App.css';
 
@@ -37,6 +39,8 @@ function Layout() {
         <Route path="/dashboard"      element={<Dashboard />} />
         <Route path="/add-vehicle"    element={<AddVehicle />} />
         <Route path="/payment/verify" element={<PaymentVerify />} />
+        <Route path="/terms-of-use" element={<TermsOfUse />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       </Routes>
       {!isAppPage && <Footer />}
     </>

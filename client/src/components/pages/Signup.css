@@ -1,115 +1,327 @@
-.form-container {
-    background: white;
-    width: 400px;
-    margin: 3rem auto;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    text-align: left;
+/* Resets sizing rule across all elements for pixel-perfect viewport rendering */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f4f6f8;
+  color: #333333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Master wrapper that handles flexible centering across all screen configurations */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f4f6f8;
+  padding: 24px 16px; /* Increased top-bottom padding for comfortable mobile scrolling */
+}
+
+/* Base structural layout for your security card components */
+.auth-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px; /* Default micro-ceiling optimized for clean single-column login */
+  margin: auto;
+  padding: 2.5rem 2.25rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  transition: max-width 0.2s ease;
+}
+
+/* Explicit scaling modifier for the 8-field registration wizard layout */
+.signup-card {
+  max-width: 540px; /* Wider desktop boundary to house side-by-side form fields */
+}
+
+.auth-card h2 {
+  text-align: center;
+  color: #060007c2; 
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+}
+
+/* Responsive Flex Grid Systems */
+
+.auth-form {
+  width: 100%;
+}
+
+/* Inline row wrapper configuration targeting side-by-side entry sets */
+.form-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Forces child input groups within rows to slice real estate evenly */
+.form-row .input-group {
+  flex: 1;
+  min-width: 0; /* Safeguards layout from breaking flex boundary parameters */
+}
+
+/* Google-Style Floating Form Inputs */
+
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+  text-align: left; /* Anchors internal baseline layout rules */
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px solid #dadce0; 
+  border-radius: 6px;
+  font-size: 16px; /* Hard lock at 16px stops iOS Safari engine from zooming layout scale on tap */
+  outline: none;
+  background: #ffffff;
+  color: #202124;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-group input:focus {
+  border-color: #1a73e8; 
+  border-width: 2px;
+  padding: 13px 11px; 
+}
+
+.input-group .floating-placeholder {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff; 
+  padding: 0 6px;
+  color: #5f6368;
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1) all;
+}
+
+.input-group input:focus ~ .floating-placeholder,
+.input-group input:not(:placeholder-shown) ~ .floating-placeholder {
+  top: 0;
+  font-size: 12px;
+  color: #1a73e8;
+  font-weight: 500;
+}
+
+.input-group input:not(:focus):not(:placeholder-shown) ~ .floating-placeholder {
+  color: #5f6368;
+}
+
+/* System Notification & Dynamic Error Indicators */
+
+.error-message {
+  color: #d93025;
+  background-color: #fce8e6;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-align: left;
+  border-left: 4px solid #d93025;
+}
+
+/* ==========================================================================
+   Legal Acceptance Framework (Checkbox Alignments)
+   ========================================================================== */
+
+.checkbox-group {
+  width: 100%;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  color: #5f6368;
+  font-size: 14px;
+  line-height: 1.45;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  min-width: 16px;
+  min-height: 16px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #1a73e8; 
+}
+
+.link-inline {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link-inline:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Action Buttons & Navigation Anchors
+   ========================================================================== */
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  background-color: #751586c2;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.15);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  margin-top: 1.5rem;
+}
+
+.submit-btn:hover {
+  background-color: #1557b0;
+}
+
+.submit-btn:active {
+  transform: scale(0.98); 
+}
+
+.toggle-text {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 14px;
+  color: #5f6368;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Dedicated Document View Engine (Terms & Privacy Pages)
+   ========================================================================== */
+
+.page-container {
+  width: 100%;
+  max-width: 800px; 
+  margin: 2rem auto;
+  background: #ffffff;
+  padding: 3.5rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  text-align: left;
+}
+
+.page-container h2 {
+  color: #1a73e8;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.page-container .last-updated {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid #dadce0;
+  padding-bottom: 1rem;
+}
+
+.page-container section {
+  margin-bottom: 2rem;
+}
+
+.page-container h3 {
+  color: #202124;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.page-container p {
+  color: #3c4043;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* Media Queries for Micro-Devices and Tablets */
+
+/* Tablet & Mobile Breakpoint for Double-Column Collapse */
+@media (max-width: 580px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0; /* Collapses inline space and trusts input-group lower limits */
   }
-  .form-container h2 {
-    text-align: center;
-    color: #008394;
+
+  .auth-card {
+    padding: 2.25rem 1.5rem; /* Shaves padding tight on small viewports */
   }
-  form label {
-    display: block;
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-  form input {
-    width: 100%;
-    padding: 0.6rem;
-    margin-top: 0.3rem;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  .submit-btn, .back-btn {
-    margin-top: 1rem;
-    width: 48%;
-    padding: 0.7rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  .submit-btn {
-    background-color: #008394;
-    color: white;
-  }
-  .submit-btn:hover {
-    background-color: #006f73;
-  }
-  .back-btn {
-    background-color: #ccc;
-  }
-  .back-btn:hover {
-    background-color: #999;
-  }
+}
+
+/* Micro Mobile Breakpoint (iPhone SE, Android Mini systems) */
+@media (max-width: 400px) {
   .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 90vh;
-    background-color: #f4f6f8;
+    padding: 12px 8px; 
   }
   
   .auth-card {
-    background: #fff;
-    padding: 2rem 3rem;
-    border-radius: 10px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
-    width: 350px;
-    text-align: center;
+    padding: 1.75rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: none; /* Flattens design layout for native processing relief */
+    background: transparent; /* Seamless blend */
   }
-  
+
   .auth-card h2 {
-    margin-bottom: 1.5rem;
-    color: #333;
+    font-size: 22px;
+  }
+}
+
+/* Responsive breakpoint handling for long document pages */
+@media (max-width: 768px) {
+  .page-container {
+    max-width: 100%;
+    margin: 0;
+    padding: 2.5rem 1.5rem;
+    border-radius: 0;
+    box-shadow: none;
+    background: #ffffff; 
   }
   
-  .auth-form .form-group {
-    margin-bottom: 1rem;
-    text-align: left;
+  .page-container h2 {
+    font-size: 26px;
   }
   
-  .auth-form label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-weight: 600;
-    color: #333;
+  .page-container h3 {
+    font-size: 18px;
   }
-  
-  .auth-form input {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-  }
-  
-  .btn-submit {
-    width: 100%;
-    background-color: #007bff;
-    color: #fff;
-    padding: 0.8rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  .btn-submit:hover {
-    background-color: #0056b3;
-  }
-  
-  .toggle-text {
-    margin-top: 1rem;
-  }
-  
-  .toggle-btn {
-    background: none;
-    border: none;
-    color: #007bff;
-    cursor: pointer;
-    font-weight: 600;
-  }
-  
+}

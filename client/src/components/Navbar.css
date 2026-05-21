@@ -1,38 +1,77 @@
+/* Navbar.css */
 .navbar {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  /*background-color: #282229c2;*/
-  margin-left: 3rem;
-  padding: 1rem 2rem;
-  color: rgb(156, 150, 150);
 }
 
 .navbar-links {
   display: flex;
   list-style: none;
-  letter-spacing: 0.1rem;
-  gap: 1.9rem;
+  letter-spacing: 0.05rem;
+  gap: 2rem;
   text-transform: uppercase;
+  margin: 0;
+  padding: 0;
 }
 
 .navbar-links a {
-  color: white;
+  color: #f8f7fa; /* Soft gray for links */
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.25s ease;
 }
 
 .navbar-links a:hover {
-  color: #eef2f3;
+  color: #1a1a1a; /* dark pop on hover */
 }
 
+/* Standout Login Action Button */
 .auth-btn {
-  padding: 0.4rem 0.8rem;
-  background: #75127691;
-  border-radius: 5px;
+  padding: 0.5rem 1.2rem;
+  background: #1a1a1a; 
+  color: #ffffff !important; /* Forces text white inside dark button container */
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.2s ease !important;
 }
 
 .auth-btn:hover {
-  background: #751586c2;
+  background: #333333;
+}
+
+/* Responsive Mobile Screen Flyout */
+@media (max-width: 768px) {
+  .navbar {
+    position: fixed;
+    top: 4rem; 
+    right: -100%;
+    width: 100%;
+    height: calc(100vh - 4rem);
+    background-color: #ffffff; /* Matches header cleanly */
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 4rem 0;
+    box-sizing: border-box;
+    z-index: 999;
+  }
+
+  .navbar-active {
+    right: 0;
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+    width: 100%;
+  }
+
+  .navbar-links a {
+    font-size: 1.2rem; /* Slighly larger readable target fonts for touch targets */
+    color: #1a1a1a;
+  }
 }
