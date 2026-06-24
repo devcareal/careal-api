@@ -41,10 +41,8 @@ function Login() {
       <div className="login-card">
 
         <div className="login-header">
-          
           <img src={logo} alt="Careal logo" className="login-logo" />
           
-
           <h1>Sign in</h1>
 
           <p>

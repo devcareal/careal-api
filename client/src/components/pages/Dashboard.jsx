@@ -1,27 +1,23 @@
-// Dashboard.jsx — src/components/pages/Dashboard.jsx
+// Dashboard.jsx — Redesigned with animated cards
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-// ✅ Two-fold deployment strategy:
-//    Single host (now):     falls back to "/api" — Vite proxy (dev) / Express (prod)
-//    Separate host (later): set VITE_API_BASE in Render env — no code changes needed
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const statusConfig = {
-  Pending:    { bg: "#FFF7ED", text: "#C2570A", dot: "#F97316" },
-  Processing: { bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6" },
-  Delivered:  { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E" },
-  Done:       { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E" },
-  "N/A":      { bg: "#F9FAFB", text: "#9CA3AF", dot: "#D1D5DB" },
+  Pending:    { bg: "#FFF7ED", text: "#C2570A", dot: "#F97316", label: "Pending" },
+  Processing: { bg: "#EFF6FF", text: "#1D4ED8", dot: "#3B82F6", label: "Processing" },
+  Delivered:  { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E", label: "Delivered" },
+  Done:       { bg: "#F0FDF4", text: "#15803D", dot: "#22C55E", label: "Done" },
+  "N/A":      { bg: "#F9FAFB", text: "#9CA3AF", dot: "#D1D5DB", label: "N/A" },
 };
 
 function StatusBadge({ label }) {
-  const cfg = statusConfig[label];
-  if (!cfg) return <span style={{ fontSize: 12, color: "#9CA3AF" }}>{label || "Pending"}</span>;
+  const cfg = statusConfig[label] || statusConfig["Pending"];
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
-      padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+      padding: "4px 12px", borderRadius: 100, fontSize: 12, fontWeight: 700,
       background: cfg.bg, color: cfg.text,
     }}>
       <span style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.dot, display: "inline-block" }} />
@@ -32,28 +28,23 @@ function StatusBadge({ label }) {
 
 function expandServices(pmt) {
   const rows = [];
-  if (pmt.license && pmt.license_status !== "N/A") {
-    rows.push({ id: `${pmt.id}-license`, name: "Vehicle License",
+  if (pmt.license && pmt.license_status !== "N/A")
+    rows.push({ id: `${pmt.id}-license`, name: "Vehicle License", icon: "📋",
       amount: pmt.license_amount, status: pmt.license_status || "Pending", ref: pmt.payment_ref });
-  }
-  if (pmt.roadworthiness && pmt.roadworthiness_status !== "N/A") {
-    rows.push({ id: `${pmt.id}-roadworthiness`, name: "Road Worthiness",
+  if (pmt.roadworthiness && pmt.roadworthiness_status !== "N/A")
+    rows.push({ id: `${pmt.id}-roadworthiness`, name: "Road Worthiness", icon: "🛡️",
       amount: pmt.roadworthiness_amount, status: pmt.roadworthiness_status || "Pending", ref: pmt.payment_ref });
-  }
-  if (pmt.insurance && pmt.insurance_status !== "N/A") {
-    rows.push({ id: `${pmt.id}-insurance`, name: "Motor Insurance",
+  if (pmt.insurance && pmt.insurance_status !== "N/A")
+    rows.push({ id: `${pmt.id}-insurance`, name: "Motor Insurance", icon: "📄",
       amount: pmt.insurance_amount, status: pmt.insurance_status || "Pending", ref: pmt.payment_ref });
-  }
   return rows;
 }
 
-// Supabase schema uses reg_number — normalise so the rest of the component
-// can use plate_number uniformly
 function normalisePmt(pmt) {
   return { ...pmt, plate_number: pmt.plate_number || pmt.reg_number || "" };
 }
 
-function VehicleCard({ vehicle, payments, onPayService }) {
+function VehicleCard({ vehicle, payments, onPayService, index }) {
   const [expanded, setExpanded] = useState(true);
   const vehiclePayments = payments.filter(p =>
     (p.plate_number || p.reg_number || "") === vehicle.plate_number
@@ -61,115 +52,93 @@ function VehicleCard({ vehicle, payments, onPayService }) {
   const serviceRows = vehiclePayments.flatMap(expandServices);
   const grandTotal  = vehiclePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
+  const cardColors = [
+    ["#7C3AED", "#A78BFA"],
+    ["#0F766E", "#34D399"],
+    ["#B45309", "#FBBF24"],
+    ["#0369A1", "#38BDF8"],
+  ];
+  const [from, to] = cardColors[index % cardColors.length];
+
   return (
-    <div style={{
-      background: "#fff", border: "1.5px solid #EDE9FE",
-      borderRadius: 18, marginBottom: 20, overflow: "hidden",
-      boxShadow: "0 2px 16px rgba(109,40,217,0.06)",
-    }}>
+    <div className="vehicle-card" style={{ animationDelay: `${index * 80}ms` }}>
       <div
+        className={`vehicle-card-header ${expanded ? "expanded" : ""}`}
         onClick={() => setExpanded(e => !e)}
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "18px 24px", cursor: "pointer",
-          background: expanded ? "linear-gradient(90deg,#7C3AED0A,#fff)" : "#fff",
-          borderBottom: expanded ? "1.5px solid #F3F0FF" : "none",
-        }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: 14,
-            background: "linear-gradient(135deg,#7C3AED,#A78BFA)",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
-          }}>🚗</div>
-          <div>
-            <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 17, color: "#1E1040" }}>
-              {vehicle.plate_number}
-            </div>
-            <div style={{ fontSize: 13, color: "#7C7CA0", marginTop: 2 }}>
+        <div className="vehicle-card-left">
+          <div className="vehicle-icon-wrap" style={{ background: `linear-gradient(135deg,${from},${to})` }}>
+            🚗
+          </div>
+          <div className="vehicle-info">
+            <div className="vehicle-plate">{vehicle.plate_number}</div>
+            <div className="vehicle-meta">
               {vehicle.make || "—"} &bull; {vehicle.color || "—"}
             </div>
-            <div style={{ fontSize: 11, color: "#C4B5FD", marginTop: 3 }}>
-              Added {new Date(vehicle.created_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
-              &nbsp;&middot;&nbsp;
-              Verified {vehicle.verified_at
-                ? new Date(vehicle.verified_at).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })
-                : "—"}
+            <div className="vehicle-dates">
+              Added {new Date(vehicle.created_at).toLocaleDateString("en-NG", {
+                day: "numeric", month: "short", year: "numeric"
+              })}
             </div>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="vehicle-card-right">
           <button
+            className="pay-btn"
+            style={{ background: `linear-gradient(135deg,${from},${to})` }}
             onClick={e => { e.stopPropagation(); onPayService(vehicle); }}
-            style={{
-              background: "linear-gradient(135deg,#7C3AED,#A78BFA)",
-              color: "#fff", border: "none", borderRadius: 10,
-              padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-              boxShadow: "0 2px 10px rgba(124,58,237,0.22)", whiteSpace: "nowrap",
-            }}
           >
-            Pay for this →
+            Renew Docs
           </button>
-          <span style={{
-            color: "#A78BFA", fontSize: 20, display: "inline-block",
-            transition: "transform 0.2s",
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-          }}>▾</span>
+          <span className={`chevron ${expanded ? "up" : ""}`}>▾</span>
         </div>
       </div>
 
       {expanded && (
-        <div style={{ padding: "0 24px 20px" }}>
+        <div className="vehicle-card-body">
           {serviceRows.length === 0 ? (
-            <div style={{ padding: "20px 0", textAlign: "center" }}>
-              <p style={{ color: "#A78BFA", fontSize: 13, marginBottom: 12 }}>
-                No services recorded for this vehicle yet.
-              </p>
-              <button onClick={() => onPayService(vehicle)} style={{
-                background: "linear-gradient(135deg,#7C3AED,#A78BFA)",
-                color: "#fff", border: "none", borderRadius: 10,
-                padding: "9px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-              }}>
+            <div className="vehicle-empty-services">
+              <div className="vehicle-empty-icon">📁</div>
+              <p>No services recorded yet for this vehicle.</p>
+              <button
+                className="vehicle-empty-btn"
+                style={{ background: `linear-gradient(135deg,${from},${to})` }}
+                onClick={() => onPayService(vehicle)}
+              >
                 + Request a Service
               </button>
             </div>
           ) : (
             <>
-              <div style={{
-                display: "grid", gridTemplateColumns: "1fr 130px 110px",
-                gap: 8, padding: "12px 0 8px",
-                borderBottom: "1px solid #F3F0FF",
-                fontSize: 11, fontWeight: 700, color: "#A78BFA",
-                letterSpacing: 1, textTransform: "uppercase",
-              }}>
-                <span>Service</span><span>Status</span><span>Amount (₦)</span>
+              <div className="services-table-head">
+                <span>Service</span>
+                <span>Status</span>
+                <span>Amount</span>
               </div>
-
               {serviceRows.map((row, i) => (
-                <div key={row.id} style={{
-                  display: "grid", gridTemplateColumns: "1fr 130px 110px",
-                  gap: 8, alignItems: "center", padding: "13px 0",
-                  borderBottom: i < serviceRows.length - 1 ? "1px solid #F9F7FF" : "none",
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#2D1B6B", fontSize: 14 }}>{row.name}</div>
-                    {row.ref && <div style={{ fontSize: 11, color: "#C4B5FD", marginTop: 2 }}>Ref: {row.ref}</div>}
+                <div
+                  key={row.id}
+                  className="services-table-row"
+                  style={{ borderBottom: i < serviceRows.length - 1 ? "1px solid #F5F3FF" : "none" }}
+                >
+                  <div className="service-name-cell">
+                    <span className="service-icon">{row.icon}</span>
+                    <div>
+                      <div className="service-name">{row.name}</div>
+                      {row.ref && <div className="service-ref">Ref: {row.ref}</div>}
+                    </div>
                   </div>
                   <StatusBadge label={row.status} />
-                  <span style={{ fontWeight: 700, color: "#1E1040", fontSize: 14 }}>
+                  <span className="service-amount">
                     {row.amount != null && Number(row.amount) > 0
                       ? `₦${Number(row.amount).toLocaleString()}` : "—"}
                   </span>
                 </div>
               ))}
-
-              <div style={{
-                display: "flex", justifyContent: "flex-end", alignItems: "center",
-                gap: 12, paddingTop: 14, borderTop: "1.5px solid #F3F0FF", marginTop: 4,
-              }}>
-                <span style={{ fontSize: 13, color: "#7C7CA0", fontWeight: 600 }}>Grand Total</span>
-                <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, color: "#7C3AED" }}>
+              <div className="services-total-row">
+                <span className="services-total-label">Grand Total</span>
+                <span className="services-total-value" style={{ color: from }}>
                   ₦{grandTotal.toLocaleString()}
                 </span>
               </div>
@@ -209,27 +178,22 @@ export default function Dashboard() {
         setError(null);
         const token = localStorage.getItem("careal_token") || "";
         if (!token) throw new Error("No token found. Please log in again.");
-
         const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-
         const [profileRes, vehiclesRes, paymentsRes] = await Promise.all([
           fetch(`${API_BASE}/profile`,  { headers }),
           fetch(`${API_BASE}/vehicles`, { headers }),
           fetch(`${API_BASE}/payments`, { headers }),
         ]);
-
-        if (!profileRes.ok)  throw new Error(`Could not load your profile (${profileRes.status})`);
-        if (!vehiclesRes.ok) throw new Error(`Could not load your vehicles (${vehiclesRes.status})`);
-        if (!paymentsRes.ok) throw new Error(`Could not load your payments (${paymentsRes.status})`);
-
-        const profileData  = await profileRes.json();
-        const vehiclesData = await vehiclesRes.json();
-        const paymentsData = await paymentsRes.json();
-
+        if (!profileRes.ok)  throw new Error(`Could not load profile (${profileRes.status})`);
+        if (!vehiclesRes.ok) throw new Error(`Could not load vehicles (${vehiclesRes.status})`);
+        if (!paymentsRes.ok) throw new Error(`Could not load payments (${paymentsRes.status})`);
+        const [profileData, vehiclesData, paymentsData] = await Promise.all([
+          profileRes.json(), vehiclesRes.json(), paymentsRes.json(),
+        ]);
         setUser(profileData.user || null);
         setVehicles(vehiclesData.vehicles || []);
-        const rawPayments = Array.isArray(paymentsData) ? paymentsData : paymentsData.payments || [];
-        setPayments(rawPayments.map(normalisePmt));
+        const raw = Array.isArray(paymentsData) ? paymentsData : paymentsData.payments || [];
+        setPayments(raw.map(normalisePmt));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -246,10 +210,10 @@ export default function Dashboard() {
     return "Good evening";
   };
 
-  const handlePayService  = (vehicle) => navigate(`/services?plate=${encodeURIComponent(vehicle.plate_number)}`);
-  const handleAddVehicle  = ()        => navigate("/add-vehicle");
-  const handleLogout      = ()        => { localStorage.removeItem("careal_token"); navigate("/login"); };
-  const handleCtaServices = ()        => {
+  const handlePayService  = v => navigate(`/services?plate=${encodeURIComponent(v.plate_number)}`);
+  const handleAddVehicle  = () => navigate("/add-vehicle");
+  const handleLogout      = () => { localStorage.removeItem("careal_token"); navigate("/login"); };
+  const handleCtaServices = () => {
     if (vehicles.length > 0) navigate(`/services?plate=${encodeURIComponent(vehicles[0].plate_number)}`);
     else navigate("/services");
   };
@@ -264,153 +228,119 @@ export default function Dashboard() {
     ["Delivered","Done"].includes(p.insurance_status)
   ).length;
 
+  const totalSpent = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #F8F6FF; font-family: 'DM Sans', sans-serif; color: #1E1040; }
-        .dash-root { min-height: 100vh; display: flex; flex-direction: column; }
-        .nav { background: #fff; border-bottom: 1.5px solid #EDE9FE; padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; color: #7C3AED; letter-spacing: -0.5px; }
-        .nav-logo span { color: #1E1040; }
-        .nav-right { display: flex; align-items: center; gap: 14px; }
-        .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#7C3AED,#C4B5FD); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 15px; }
-        .logout-btn { font-size: 13px; font-weight: 600; color: #7C3AED; background: #F5F3FF; border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer; }
-        .logout-btn:hover { background: #EDE9FE; }
-        .content { max-width: 900px; margin: 0 auto; padding: 36px 24px 60px; width: 100%; }
-        .welcome-banner { background: linear-gradient(120deg,#7C3AED 0%,#9D5CF6 60%,#C4B5FD 100%); border-radius: 22px; padding: 32px 36px; color: #fff; margin-bottom: 32px; position: relative; overflow: hidden; }
-        .welcome-banner::after { content: '🚗'; position: absolute; right: 32px; top: 50%; transform: translateY(-50%); font-size: 80px; opacity: 0.15; pointer-events: none; }
-        .welcome-greeting { font-size: 14px; font-weight: 500; opacity: 0.82; margin-bottom: 4px; }
-        .welcome-name { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 6px; }
-        .welcome-meta { font-size: 13px; opacity: 0.72; }
-        .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 32px; }
-        .stat-card { background: #fff; border: 1.5px solid #EDE9FE; border-radius: 16px; padding: 20px 22px; box-shadow: 0 2px 12px rgba(109,40,217,0.05); }
-        .stat-label { font-size: 11px; color: #A78BFA; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-        .stat-value { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; color: #1E1040; line-height: 1; }
-        .stat-sub { font-size: 12px; color: #9CA3AF; margin-top: 5px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .section-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #1E1040; }
-        .add-car-btn { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 2px dashed #C4B5FD; color: #7C3AED; font-weight: 700; font-size: 13px; padding: 9px 18px; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
-        .add-car-btn:hover { background: #F5F3FF; border-color: #7C3AED; }
-        .cta-row { margin-top: 32px; background: #fff; border: 1.5px solid #EDE9FE; border-radius: 18px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(109,40,217,0.05); gap: 16px; }
-        .cta-text h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: #1E1040; margin-bottom: 4px; }
-        .cta-text p { font-size: 13px; color: #7C7CA0; }
-        .cta-btn { background: linear-gradient(135deg,#7C3AED,#A78BFA); color: #fff; border: none; border-radius: 12px; padding: 12px 26px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 14px rgba(124,58,237,0.25); transition: opacity 0.15s, transform 0.1s; flex-shrink: 0; }
-        .cta-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; color: #7C3AED; }
-        .spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #EDE9FE; border-top-color: #7C3AED; animation: spin 0.8s linear infinite; }
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes toastIn { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-        .error-box { background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 14px; padding: 28px; text-align: center; color: #B91C1C; }
-        .empty { text-align: center; padding: 48px 24px; background: #fff; border: 1.5px dashed #EDE9FE; border-radius: 18px; }
-        .empty-icon { font-size: 48px; margin-bottom: 12px; }
-        .empty h3 { font-family: 'Syne', sans-serif; font-size: 17px; color: #1E1040; margin-bottom: 6px; }
-        .empty p { font-size: 13px; color: #7C7CA0; margin-bottom: 16px; }
-        .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: #1E1040; color: #fff; padding: 12px 24px; border-radius: 40px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 32px rgba(124,58,237,0.30); animation: toastIn 0.3s ease; z-index: 999; white-space: nowrap; }
-        @media (max-width: 600px) {
-          .stats { grid-template-columns: 1fr 1fr; }
-          .stats .stat-card:last-child { grid-column: span 2; }
-          .welcome-name { font-size: 22px; }
-          .cta-row { flex-direction: column; }
-          .nav { padding: 0 16px; }
-          .content { padding: 20px 14px 48px; }
-          .welcome-banner { padding: 22px; }
-          .toast { font-size: 12px; padding: 10px 18px; white-space: normal; text-align: center; max-width: 90vw; }
-        }
-      `}</style>
-
-      {toast && <div className="toast">{toast}</div>}
+      <style>{DASH_STYLES}</style>
+      {toast && <div className="dash-toast">{toast}</div>}
 
       <div className="dash-root">
-        <nav className="nav">
-          <div className="nav-logo">CAR<span>EAL</span></div>
-          <div className="nav-right">
-            <button className="logout-btn" onClick={handleLogout}>Log out</button>
-            <div className="avatar">
-              {user ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}` : "?"}
+        {/* Nav */}
+        <nav className="dash-nav">
+          <div className="dash-nav-logo">CAR<span>EAL</span></div>
+          <div className="dash-nav-right">
+            <button className="dash-logout-btn" onClick={handleLogout}>Log out</button>
+            <div className="dash-avatar">
+              {user ? `${user.first_name?.[0]||""}${user.last_name?.[0]||""}` : "?"}
             </div>
           </div>
         </nav>
 
-        <div className="content">
+        <div className="dash-content">
+          {/* Loading */}
           {loading && (
-            <div className="loading-screen">
-              <div className="spinner" />
-              <span style={{ fontFamily: "'Syne', sans-serif", fontWeight: 600 }}>Loading your dashboard…</span>
+            <div className="dash-loading">
+              <div className="dash-spinner" />
+              <span>Loading your dashboard…</span>
             </div>
           )}
 
+          {/* Error */}
           {!loading && error && (
-            <div className="error-box">
-              <div style={{ fontSize: 36, marginBottom: 10 }}>⚠️</div>
-              <strong style={{ fontSize: 16 }}>Could not load dashboard</strong>
-              <p style={{ marginTop: 8, fontSize: 14 }}>{error}</p>
-              <button onClick={() => navigate("/login")} style={{ marginTop: 16, background: "#7C3AED", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                Go to Login
-              </button>
+            <div className="dash-error-box">
+              <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+              <strong>Could not load dashboard</strong>
+              <p>{error}</p>
+              <button onClick={() => navigate("/login")} className="dash-error-btn">Go to Login</button>
             </div>
           )}
 
           {!loading && !error && user && (
             <>
-              <div className="welcome-banner">
-                <div className="welcome-greeting">{greeting()},</div>
-                <div className="welcome-name">{user.first_name} {user.last_name} 👋</div>
-                <div className="welcome-meta">
-                  {user.email}
-                  {vehicles.length > 0 && (
-                    <> &nbsp;&middot;&nbsp; Primary plate: <strong>{vehicles[0].plate_number}</strong></>
-                  )}
+              {/* Welcome Banner */}
+              <div className="dash-banner">
+                <div className="dash-banner-bg-circle dash-banner-bg-circle-1" />
+                <div className="dash-banner-bg-circle dash-banner-bg-circle-2" />
+                <div className="dash-banner-content">
+                  <div className="dash-banner-greeting">{greeting()},</div>
+                  <div className="dash-banner-name">{user.first_name} {user.last_name} 👋</div>
+                  <div className="dash-banner-meta">
+                    {user.email}
+                    {vehicles.length > 0 && (
+                      <> &nbsp;·&nbsp; Primary plate: <strong>{vehicles[0].plate_number}</strong></>
+                    )}
+                  </div>
                 </div>
+                <div className="dash-banner-car-emoji">🚗</div>
               </div>
 
-              <div className="stats">
-                <div className="stat-card">
-                  <div className="stat-label">Vehicles</div>
-                  <div className="stat-value">{vehicles.length}</div>
-                  <div className="stat-sub">Registered</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">In Progress</div>
-                  <div className="stat-value" style={{ color: "#F97316" }}>{pendingCount}</div>
-                  <div className="stat-sub">Active services</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Completed</div>
-                  <div className="stat-value" style={{ color: "#16A34A" }}>{deliveredCount}</div>
-                  <div className="stat-sub">Delivered</div>
-                </div>
+              {/* Stat Cards */}
+              <div className="dash-stats">
+                {[
+                  { label: "Vehicles", value: vehicles.length, sub: "Registered", icon: "🚗", color: "#7C3AED", delay: 0 },
+                  { label: "In Progress", value: pendingCount, sub: "Active services", icon: "⏳", color: "#F97316", delay: 60 },
+                  { label: "Completed", value: deliveredCount, sub: "Delivered", icon: "✅", color: "#16A34A", delay: 120 },
+                  { label: "Total Spent", value: `₦${totalSpent.toLocaleString()}`, sub: "Lifetime", icon: "💳", color: "#0369A1", delay: 180, small: true },
+                ].map((stat) => (
+                  <div className="dash-stat-card" key={stat.label} style={{ animationDelay: `${stat.delay}ms` }}>
+                    <div className="dash-stat-icon-wrap" style={{ background: `${stat.color}15` }}>
+                      <span>{stat.icon}</span>
+                    </div>
+                    <div className="dash-stat-body">
+                      <div className="dash-stat-label">{stat.label}</div>
+                      <div className="dash-stat-value" style={{ color: stat.color, fontSize: stat.small ? 22 : 34 }}>
+                        {stat.value}
+                      </div>
+                      <div className="dash-stat-sub">{stat.sub}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <div className="section-header">
-                <div className="section-title">My Vehicles</div>
-                <button className="add-car-btn" onClick={handleAddVehicle}>
-                  <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span> Add Vehicle
+              {/* Vehicles Section */}
+              <div className="dash-section-header">
+                <div className="dash-section-title">My Vehicles</div>
+                <button className="dash-add-btn" onClick={handleAddVehicle}>
+                  <span>＋</span> Add Vehicle
                 </button>
               </div>
 
               {vehicles.length === 0 ? (
-                <div className="empty">
-                  <div className="empty-icon">🚗</div>
+                <div className="dash-empty">
+                  <div className="dash-empty-icon">🚗</div>
                   <h3>No vehicles yet</h3>
                   <p>Add your first vehicle to start renewing your documents.</p>
-                  <button className="add-car-btn" onClick={handleAddVehicle} style={{ margin: "0 auto" }}>
-                    <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span> Add Vehicle
+                  <button className="dash-add-btn" onClick={handleAddVehicle} style={{ margin: "0 auto" }}>
+                    <span>＋</span> Add Vehicle
                   </button>
                 </div>
               ) : (
-                vehicles.map(v => (
-                  <VehicleCard key={v.id} vehicle={v} payments={payments} onPayService={handlePayService} />
+                vehicles.map((v, i) => (
+                  <VehicleCard key={v.id} vehicle={v} payments={payments}
+                    onPayService={handlePayService} index={i} />
                 ))
               )}
 
-              <div className="cta-row">
-                <div className="cta-text">
+              {/* CTA Row */}
+              <div className="dash-cta-row">
+                <div className="dash-cta-text">
                   <h3>Ready to renew a document?</h3>
                   <p>Vehicle License · Road Worthiness · Motor Insurance — all in one place.</p>
                 </div>
-                <button className="cta-btn" onClick={handleCtaServices}>Pay for Service →</button>
+                <button className="dash-cta-btn" onClick={handleCtaServices}>
+                  Pay for Service →
+                </button>
               </div>
             </>
           )}
@@ -419,3 +349,189 @@ export default function Dashboard() {
     </>
   );
 }
+
+const DASH_STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #F8F6FF; font-family: 'DM Sans', sans-serif; color: #1E1040; }
+
+/* Animations */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+
+/* Layout */
+.dash-root { min-height:100vh; display:flex; flex-direction:column; }
+
+/* Nav */
+.dash-nav { background:#fff; border-bottom:1.5px solid #EDE9FE; padding:0 40px; height:68px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(124,58,237,0.06); }
+.dash-nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:#7C3AED; letter-spacing:-0.5px; }
+.dash-nav-logo span { color:#1E1040; }
+.dash-nav-right { display:flex; align-items:center; gap:14px; }
+.dash-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#7C3AED,#C4B5FD);
+  display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:15px;
+  box-shadow:0 3px 10px rgba(124,58,237,0.25); }
+.dash-logout-btn { font-size:13px; font-weight:600; color:#7C3AED; background:#F5F3FF;
+  border:1.5px solid #EDE9FE; padding:7px 16px; border-radius:10px; cursor:pointer;
+  transition:background 0.15s, border-color 0.15s; }
+.dash-logout-btn:hover { background:#EDE9FE; border-color:#C4B5FD; }
+
+/* Content */
+.dash-content { max-width:960px; margin:0 auto; padding:36px 28px 72px; width:100%; }
+
+/* Toast */
+.dash-toast { position:fixed; top:84px; left:50%; transform:translateX(-50%);
+  background:#1E1040; color:#fff; padding:12px 28px; border-radius:100px;
+  font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(124,58,237,0.28);
+  animation:slideDown 0.3s ease; z-index:999; white-space:nowrap; }
+
+/* Loading */
+.dash-loading { display:flex; flex-direction:column; align-items:center;
+  justify-content:center; min-height:60vh; gap:16px; color:#7C3AED; }
+.dash-spinner { width:42px; height:42px; border-radius:50%; border:3px solid #EDE9FE;
+  border-top-color:#7C3AED; animation:spin 0.8s linear infinite; }
+
+/* Error */
+.dash-error-box { background:#FEF2F2; border:1.5px solid #FECACA; border-radius:20px;
+  padding:40px; text-align:center; color:#B91C1C; }
+.dash-error-box p { margin-top:8px; font-size:14px; }
+.dash-error-btn { margin-top:20px; background:#7C3AED; color:#fff; border:none;
+  border-radius:10px; padding:10px 24px; font-size:14px; font-weight:600; cursor:pointer; }
+
+/* Banner */
+.dash-banner { background:linear-gradient(120deg,#7C3AED 0%,#9D5CF6 55%,#C4B5FD 100%);
+  border-radius:24px; padding:36px 40px; color:#fff; margin-bottom:28px;
+  position:relative; overflow:hidden; animation:fadeUp 0.5s ease both; }
+.dash-banner-bg-circle { position:absolute; border-radius:50%; pointer-events:none; }
+.dash-banner-bg-circle-1 { width:300px; height:300px; background:rgba(255,255,255,0.07);
+  top:-120px; right:-80px; }
+.dash-banner-bg-circle-2 { width:160px; height:160px; background:rgba(255,255,255,0.05);
+  bottom:-60px; left:40px; }
+.dash-banner-content { position:relative; z-index:1; }
+.dash-banner-greeting { font-size:14px; font-weight:500; opacity:0.8; margin-bottom:4px; }
+.dash-banner-name { font-family:'Syne',sans-serif; font-size:30px; font-weight:800;
+  margin-bottom:6px; letter-spacing:-0.5px; }
+.dash-banner-meta { font-size:13px; opacity:0.72; }
+.dash-banner-car-emoji { position:absolute; right:36px; top:50%; transform:translateY(-50%);
+  font-size:90px; opacity:0.12; pointer-events:none; z-index:0; }
+
+/* Stats */
+.dash-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:32px; }
+.dash-stat-card { background:#fff; border:1.5px solid #EDE9FE; border-radius:18px;
+  padding:20px 22px; box-shadow:0 2px 14px rgba(124,58,237,0.05);
+  display:flex; align-items:center; gap:14px;
+  animation:fadeUp 0.5s ease both; transition:transform 0.2s ease, box-shadow 0.2s ease; }
+.dash-stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(124,58,237,0.1); }
+.dash-stat-icon-wrap { width:46px; height:46px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.dash-stat-label { font-size:11px; color:#A78BFA; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.8px; margin-bottom:4px; }
+.dash-stat-value { font-family:'Syne',sans-serif; font-size:34px; font-weight:800;
+  color:#1E1040; line-height:1; }
+.dash-stat-sub { font-size:12px; color:#9CA3AF; margin-top:4px; }
+
+/* Section header */
+.dash-section-header { display:flex; justify-content:space-between;
+  align-items:center; margin-bottom:18px; }
+.dash-section-title { font-family:'Syne',sans-serif; font-size:18px;
+  font-weight:700; color:#1E1040; }
+.dash-add-btn { display:inline-flex; align-items:center; gap:7px;
+  background:#fff; border:2px dashed #C4B5FD; color:#7C3AED;
+  font-weight:700; font-size:13px; padding:9px 18px; border-radius:12px;
+  cursor:pointer; transition:background 0.15s, border-color 0.15s; }
+.dash-add-btn:hover { background:#F5F3FF; border-color:#7C3AED; }
+
+/* Empty state */
+.dash-empty { text-align:center; padding:56px 24px; background:#fff;
+  border:2px dashed #EDE9FE; border-radius:22px; animation:fadeUp 0.5s ease; }
+.dash-empty-icon { font-size:52px; margin-bottom:14px; }
+.dash-empty h3 { font-family:'Syne',sans-serif; font-size:18px;
+  color:#1E1040; margin-bottom:8px; }
+.dash-empty p { font-size:13px; color:#7C7CA0; margin-bottom:20px; }
+
+/* Vehicle Cards */
+.vehicle-card { background:#fff; border:1.5px solid #EDE9FE; border-radius:20px;
+  margin-bottom:18px; overflow:hidden; box-shadow:0 3px 18px rgba(124,58,237,0.07);
+  animation:fadeUp 0.5s ease both; transition:box-shadow 0.2s ease; }
+.vehicle-card:hover { box-shadow:0 8px 32px rgba(124,58,237,0.12); }
+.vehicle-card-header { display:flex; align-items:center; justify-content:space-between;
+  padding:20px 26px; cursor:pointer; transition:background 0.15s;
+  border-bottom:1.5px solid transparent; }
+.vehicle-card-header.expanded { background:linear-gradient(90deg,rgba(124,58,237,0.04),#fff);
+  border-bottom-color:#F3F0FF; }
+.vehicle-card-left { display:flex; align-items:center; gap:16px; flex:1; min-width:0; }
+.vehicle-icon-wrap { width:50px; height:50px; border-radius:16px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  box-shadow:0 4px 14px rgba(124,58,237,0.22); }
+.vehicle-plate { font-family:'Syne',sans-serif; font-weight:700; font-size:17px; color:#1E1040; }
+.vehicle-meta { font-size:13px; color:#7C7CA0; margin-top:2px; }
+.vehicle-dates { font-size:11px; color:#C4B5FD; margin-top:3px; }
+.vehicle-card-right { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.pay-btn { color:#fff; border:none; border-radius:12px; padding:9px 20px;
+  font-size:12px; font-weight:700; cursor:pointer;
+  box-shadow:0 3px 12px rgba(124,58,237,0.22); white-space:nowrap;
+  transition:opacity 0.15s, transform 0.15s; }
+.pay-btn:hover { opacity:0.88; transform:translateY(-1px); }
+.chevron { color:#A78BFA; font-size:20px; transition:transform 0.25s ease; display:inline-block; }
+.chevron.up { transform:rotate(180deg); }
+
+/* Vehicle body */
+.vehicle-card-body { padding:4px 26px 22px; animation:fadeUp 0.25s ease; }
+.vehicle-empty-services { text-align:center; padding:28px 0; }
+.vehicle-empty-services p { color:#A78BFA; font-size:13px; margin-bottom:14px; }
+.vehicle-empty-icon { font-size:36px; margin-bottom:8px; }
+.vehicle-empty-btn { color:#fff; border:none; border-radius:12px; padding:10px 24px;
+  font-size:13px; font-weight:700; cursor:pointer; }
+
+/* Service table */
+.services-table-head { display:grid; grid-template-columns:1fr 130px 110px;
+  gap:8px; padding:12px 0 8px; border-bottom:1px solid #F3F0FF;
+  font-size:11px; font-weight:700; color:#A78BFA;
+  letter-spacing:1px; text-transform:uppercase; }
+.services-table-row { display:grid; grid-template-columns:1fr 130px 110px;
+  gap:8px; align-items:center; padding:14px 0; }
+.service-name-cell { display:flex; align-items:center; gap:10px; }
+.service-icon { font-size:18px; }
+.service-name { font-weight:600; color:#2D1B6B; font-size:14px; }
+.service-ref { font-size:11px; color:#C4B5FD; margin-top:2px; }
+.service-amount { font-weight:700; color:#1E1040; font-size:14px; }
+.services-total-row { display:flex; justify-content:flex-end; align-items:center;
+  gap:14px; padding-top:14px; border-top:1.5px solid #F3F0FF; margin-top:4px; }
+.services-total-label { font-size:13px; color:#7C7CA0; font-weight:600; }
+.services-total-value { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; }
+
+/* CTA row */
+.dash-cta-row { margin-top:32px; background:#fff; border:1.5px solid #EDE9FE;
+  border-radius:22px; padding:26px 32px; display:flex; align-items:center;
+  justify-content:space-between; box-shadow:0 2px 14px rgba(124,58,237,0.05); gap:16px; }
+.dash-cta-text h3 { font-family:'Syne',sans-serif; font-size:17px;
+  font-weight:700; color:#1E1040; margin-bottom:4px; }
+.dash-cta-text p { font-size:13px; color:#7C7CA0; }
+.dash-cta-btn { background:linear-gradient(135deg,#7C3AED,#A78BFA); color:#fff;
+  border:none; border-radius:14px; padding:13px 28px; font-size:14px;
+  font-weight:700; cursor:pointer; white-space:nowrap;
+  box-shadow:0 6px 20px rgba(124,58,237,0.28);
+  transition:opacity 0.15s, transform 0.15s; flex-shrink:0; }
+.dash-cta-btn:hover { opacity:0.88; transform:translateY(-2px); }
+
+/* Responsive */
+@media (max-width:860px) {
+  .dash-stats { grid-template-columns:repeat(2,1fr); }
+  .dash-nav { padding:0 20px; }
+  .dash-content { padding:24px 16px 60px; }
+  .dash-banner { padding:26px 24px; }
+  .dash-banner-name { font-size:22px; }
+  .dash-banner-car-emoji { display:none; }
+}
+@media (max-width:580px) {
+  .dash-stats { grid-template-columns:1fr 1fr; }
+  .vehicle-card-header { padding:16px 18px; }
+  .vehicle-card-body { padding:4px 18px 18px; }
+  .services-table-head, .services-table-row { grid-template-columns:1fr auto; }
+  .services-table-head span:last-child, .service-amount { display:none; }
+  .dash-cta-row { flex-direction:column; text-align:center; }
+  .dash-toast { font-size:12px; padding:10px 18px; white-space:normal; text-align:center; max-width:90vw; }
+}
+`;

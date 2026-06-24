@@ -20,7 +20,7 @@ function TermsOfUse() {
         <h3>2. Account Responsibility & Integrity</h3>
         <p>
           You are entirely responsible for maintaining the strict confidentiality of your 
-          authentication credentials. Don't lie for me: you must provide accurate, current, 
+          authentication credentials. You must provide accurate, current, 
           and legitimate information during signup, including valid Plate Numbers and Chassis Numbers. 
           Providing deliberately fraudulent vehicle data will result in immediate termination of your profile.
         </p>
@@ -38,7 +38,7 @@ function TermsOfUse() {
       <section>
         <h3>4. Limitation of Liability</h3>
         <p>
-          The matter is simple: CAREAL provides verification tools on an "as-is" and "as-available" 
+          CAREAL provides verification tools on an "as-is" and "as-available" 
           basis. We do not guarantee uninterrupted platform uptime or zero latency in processing data layers, 
           and we accept no liability for any administrative or operational decisions made based on 
           the real-time verification metrics displayed.

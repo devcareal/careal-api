@@ -79,7 +79,7 @@ function Signup() {
   return (
     <div className="auth-container">
       <div className="auth-card signup-card">
-        <h2>Create Account</h2>
+        <h2>Registration</h2>
 
         {error && <p className="error-message">{error}</p>}
 

@@ -1,27 +1,36 @@
+/* App.css — Global Reset & Base */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
-/* The 'Global Reset' - This clears everything */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html{
+html {
   width: 100%;
-  height: 100%;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  /*background-color: #000; /* Optional: set your default background */
+  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
   width: 100%;
-  height: 100%;
-  margin: 0;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  min-height: 100vh;
+  font-family: 'DM Sans', 'Segoe UI', Roboto, Arial, sans-serif;
   background-color: #fff;
+  color: #1E1040;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Public pages (with Header) need top padding to clear the fixed nav */
+main, .public-page-content {
+  flex: 1;
 }

@@ -1,72 +1,165 @@
 /* Header.css */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* Reset and Layout Rules */
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    width: 100%;
-    height: 4rem;
-    background-color: #751586c2;
-    backdrop-filter: blur(8px); /* Optional: Modern premium translucent glass feel */
-    justify-content: space-between;
-    align-items: center;
-    color: rgb(247, 245, 245);
-    padding: 0 2rem;
-    margin: 0;
-    z-index: 1000; /* Keeps layout always visible on top of body data */
-    box-sizing: border-box;
+  position: fixed;
+  overflow: visible;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 68px;
+  background: rgba(14, 5, 40, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  z-index: 1000;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.25);
 }
 
 .header-brand {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  z-index: 1201; /* Must sit on top of the mobile overlay */
 }
 
 .logo-img {
-    width: 3rem;
-    border-radius: 50%;
-    margin-right: 1rem;
-    color: rgb(216, 213, 213);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Mobile Icon Toggle Elements */
+.header-brand h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+/* ── Desktop Navigation ── */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.header-nav a {
+  font-family: 'DM Sans', sans-serif;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.header-nav a:hover {
+  color: #fff;
+}
+
+.nav-login-btn {
+  background: #751586c2;
+  padding: 8px 20px;
+  border-radius: 6px;
+  transition: background 0.2s ease !important;
+}
+
+.nav-login-btn:hover {
+  background: #1557b0;
+}
+
+/* ── Hidden Mobile Elements by Default ── */
 .menu-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 24px;
-    height: 18px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 1001;
+  display: none;
 }
 
-.hamburger-bar {
-    width: 100%;
-    height: 2px;
-    background-color: #ffffff;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-origin: left center;
-}
-
-/* Morphing hamburger lines into a clean 'X' cancel sign when open */
-.menu-toggle.open .hamburger-bar:nth-child(1) {
-    transform: rotate(45deg);
-}
-
-.menu-toggle.open .hamburger-bar:nth-child(2) {
-    opacity: 0;
-    width: 0;
-}
-
-.menu-toggle.open .hamburger-bar:nth-child(3) {
-    transform: rotate(-45deg);
-}
-
+/* ── Responsive Mobile Menu Transition System ── */
 @media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-    }
+  .header {
+    padding: 0 24px;
+    height: 62px;
+  }
+
+  /* Structural Shift: Navigation becomes full screen overlay drawer */
+  .header-nav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(14, 5, 40, 0.96);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    z-index: 1100;
+    
+    /* Smooth collapse animations */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Open State for Drawer */
+  .header-nav.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .header-nav a {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  /* Hamburger Interactive UI Layout */
+  .menu-toggle {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 1201; /* Keeps button accessible above open overlay */
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hamburger-bar {
+    position: absolute;
+    width: 24px;
+    height: 2.5px;
+    border-radius: 4px;
+    background: #ffffff;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease, top 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .hamburger-bar:nth-child(1) { top: 15px; }
+  .hamburger-bar:nth-child(2) { top: 21px; }
+  .hamburger-bar:nth-child(3) { top: 27px; }
+
+  /* Animated Morph states to X */
+  .menu-toggle.open .hamburger-bar:nth-child(1) {
+    top: 21px;
+    transform: rotate(45deg);
+  }
+  .menu-toggle.open .hamburger-bar:nth-child(2) {
+    opacity: 0;
+  }
+  .menu-toggle.open .hamburger-bar:nth-child(3) {
+    top: 21px;
+    transform: rotate(-45deg);
+  }
 }

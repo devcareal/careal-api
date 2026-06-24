@@ -1,4 +1,6 @@
-/* Resets sizing rule across all elements for pixel-perfect viewport rendering */
+/* Signup.css — Redesigned */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -6,307 +8,316 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f4f6f8;
-  color: #333333;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F8F6FF;
+  color: #1E1040;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Master wrapper that handles flexible centering across all screen configurations */
 .auth-container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
   width: 100%;
-  background-color: #f4f6f8;
-  padding: 24px 16px; /* Increased top-bottom padding for comfortable mobile scrolling */
+  background: #F8F6FF;
+  padding: 100px 20px 60px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Base structural layout for your security card components */
+.auth-container::before {
+  content: '';
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+  top: -250px;
+  right: -250px;
+  pointer-events: none;
+}
+
 .auth-card {
-  background: #ffffff;
+  background: #fff;
   width: 100%;
-  max-width: 420px; /* Default micro-ceiling optimized for clean single-column login */
-  margin: auto;
-  padding: 2.5rem 2.25rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  text-align: center;
-  transition: max-width 0.2s ease;
+  max-width: 460px;
+  border-radius: 28px;
+  padding: 44px 40px;
+  box-shadow:
+    0 4px 6px rgba(124, 58, 237, 0.05),
+    0 20px 60px rgba(124, 58, 237, 0.1);
+  border: 1.5px solid #EDE9FE;
+  position: relative;
+  z-index: 1;
+  animation: cardSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Explicit scaling modifier for the 8-field registration wizard layout */
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .signup-card {
-  max-width: 540px; /* Wider desktop boundary to house side-by-side form fields */
+  max-width: 580px;
 }
 
 .auth-card h2 {
+  font-family: 'Syne', sans-serif;
   text-align: center;
-  color: #060007c2; 
+  color: #1E1040;
   font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 2rem;
-  letter-spacing: -0.5px;
+  font-weight: 800;
+  margin-bottom: 28px;
+  letter-spacing: -0.4px;
 }
-
-/* Responsive Flex Grid Systems */
 
 .auth-form {
   width: 100%;
 }
 
-/* Inline row wrapper configuration targeting side-by-side entry sets */
 .form-row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
 }
 
-/* Forces child input groups within rows to slice real estate evenly */
 .form-row .input-group {
   flex: 1;
-  min-width: 0; /* Safeguards layout from breaking flex boundary parameters */
+  min-width: 0;
 }
 
-/* Google-Style Floating Form Inputs */
-
+/* Floating label inputs */
 .input-group {
   position: relative;
   margin-bottom: 20px;
   width: 100%;
-  text-align: left; /* Anchors internal baseline layout rules */
+  text-align: left;
 }
 
 .input-group input {
   width: 100%;
-  padding: 14px 12px;
-  border: 1px solid #dadce0; 
-  border-radius: 6px;
-  font-size: 16px; /* Hard lock at 16px stops iOS Safari engine from zooming layout scale on tap */
+  padding: 14px 14px 14px 14px;
+  border: 2px solid #EDE9FE;
+  border-radius: 14px;
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
   outline: none;
-  background: #ffffff;
-  color: #202124;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: #FAFAFE;
+  color: #1E1040;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .input-group input:focus {
-  border-color: #1a73e8; 
-  border-width: 2px;
-  padding: 13px 11px; 
+  border-color: #7C3AED;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
 }
 
 .input-group .floating-placeholder {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  background: #ffffff; 
-  padding: 0 6px;
-  color: #5f6368;
-  font-size: 16px;
+  background: transparent;
+  padding: 0 4px;
+  color: #A78BFA;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
   pointer-events: none;
-  transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1) all;
+  transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1) all;
 }
 
 .input-group input:focus ~ .floating-placeholder,
 .input-group input:not(:placeholder-shown) ~ .floating-placeholder {
   top: 0;
-  font-size: 12px;
-  color: #1a73e8;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7C3AED;
+  background: #fff;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .input-group input:not(:focus):not(:placeholder-shown) ~ .floating-placeholder {
-  color: #5f6368;
+  color: #A78BFA;
 }
 
-/* System Notification & Dynamic Error Indicators */
-
+/* Error */
 .error-message {
-  color: #d93025;
-  background-color: #fce8e6;
+  color: #B91C1C;
+  background: #FEF2F2;
+  border: 1.5px solid #FECACA;
   padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 13px;
   font-weight: 500;
   margin-bottom: 20px;
   text-align: left;
-  border-left: 4px solid #d93025;
+  animation: shake 0.4s ease;
 }
 
-/* ==========================================================================
-   Legal Acceptance Framework (Checkbox Alignments)
-   ========================================================================== */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
 
+/* Checkboxes */
 .checkbox-group {
   width: 100%;
-  margin: 20px 0;
+  margin: 12px 0;
   text-align: left;
 }
 
 .checkbox-label {
-  display: flex !important;
+  display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
-  color: #5f6368;
-  font-size: 14px;
-  line-height: 1.45;
+  color: #7C7CA0;
+  font-size: 13.5px;
+  line-height: 1.5;
   user-select: none;
 }
 
 .checkbox-label input[type="checkbox"] {
-  min-width: 16px;
-  min-height: 16px;
-  margin-top: 2px;
+  min-width: 18px;
+  min-height: 18px;
+  margin-top: 1px;
   cursor: pointer;
-  accent-color: #1a73e8; 
+  accent-color: #7C3AED;
+  border-radius: 4px;
 }
 
 .link-inline {
-  color: #1a73e8;
+  color: #7C3AED;
   text-decoration: none;
   font-weight: 600;
+  transition: opacity 0.2s;
 }
 
 .link-inline:hover {
+  opacity: 0.75;
   text-decoration: underline;
 }
 
-/* ==========================================================================
-   Action Buttons & Navigation Anchors
-   ========================================================================== */
-
+/* Submit Button */
 .submit-btn {
   display: block;
   width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
   border: none;
-  border-radius: 6px;
+  border-radius: 14px;
   cursor: pointer;
   text-align: center;
-  background-color: #751586c2;
-  color: #ffffff;
-  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.15);
-  transition: background-color 0.15s ease, transform 0.1s ease;
-  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #7C3AED, #9D5CF6);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 20px;
+  letter-spacing: 0.2px;
 }
 
 .submit-btn:hover {
-  background-color: #1557b0;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.4);
 }
 
 .submit-btn:active {
-  transform: scale(0.98); 
+  transform: translateY(0);
 }
 
 .toggle-text {
-  margin-top: 1.75rem;
+  margin-top: 22px;
   text-align: center;
   font-size: 14px;
-  color: #5f6368;
+  color: #7C7CA0;
 }
 
 .link {
   background: none;
   border: none;
-  color: #1a73e8;
+  color: #7C3AED;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  text-decoration: none;
   margin-left: 4px;
+  transition: opacity 0.2s;
 }
 
 .link:hover {
+  opacity: 0.75;
   text-decoration: underline;
 }
 
-/* ==========================================================================
-   Dedicated Document View Engine (Terms & Privacy Pages)
-   ========================================================================== */
-
+/* Legal / Terms pages */
 .page-container {
   width: 100%;
-  max-width: 800px; 
+  max-width: 800px;
   margin: 2rem auto;
-  background: #ffffff;
+  background: #fff;
   padding: 3.5rem 3rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.06);
+  border: 1.5px solid #EDE9FE;
   text-align: left;
 }
 
 .page-container h2 {
-  color: #1a73e8;
+  font-family: 'Syne', sans-serif;
+  color: #1E1040;
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 0.5rem;
-  text-align: left;
 }
 
 .page-container .last-updated {
   font-size: 14px;
-  color: #5f6368;
+  color: #7C7CA0;
   margin-bottom: 2.5rem;
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #EDE9FE;
   padding-bottom: 1rem;
 }
 
-.page-container section {
-  margin-bottom: 2rem;
-}
+.page-container section { margin-bottom: 2rem; }
 
 .page-container h3 {
-  color: #202124;
+  font-family: 'Syne', sans-serif;
+  color: #1E1040;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.75rem;
 }
 
 .page-container p {
-  color: #3c4043;
+  color: #4B5563;
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
-/* Media Queries for Micro-Devices and Tablets */
-
-/* Tablet & Mobile Breakpoint for Double-Column Collapse */
 @media (max-width: 580px) {
   .form-row {
     flex-direction: column;
-    gap: 0; /* Collapses inline space and trusts input-group lower limits */
+    gap: 0;
   }
 
   .auth-card {
-    padding: 2.25rem 1.5rem; /* Shaves padding tight on small viewports */
+    padding: 32px 22px;
+    border-radius: 20px;
+  }
+
+  .signup-card {
+    max-width: 100%;
   }
 }
 
-/* Micro Mobile Breakpoint (iPhone SE, Android Mini systems) */
-@media (max-width: 400px) {
-  .auth-container {
-    padding: 12px 8px; 
-  }
-  
-  .auth-card {
-    padding: 1.75rem 1.25rem;
-    border-radius: 8px;
-    box-shadow: none; /* Flattens design layout for native processing relief */
-    background: transparent; /* Seamless blend */
-  }
-
-  .auth-card h2 {
-    font-size: 22px;
-  }
-}
-
-/* Responsive breakpoint handling for long document pages */
 @media (max-width: 768px) {
   .page-container {
     max-width: 100%;
@@ -314,14 +325,5 @@ body {
     padding: 2.5rem 1.5rem;
     border-radius: 0;
     box-shadow: none;
-    background: #ffffff; 
-  }
-  
-  .page-container h2 {
-    font-size: 26px;
-  }
-  
-  .page-container h3 {
-    font-size: 18px;
   }
 }
