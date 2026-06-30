@@ -1,7 +1,7 @@
 // Footer.jsx — Redesigned
 import React from 'react';
 import { Link } from 'react-router-dom';
-import img5 from "../assets/images/Careal-logo-2.png";
+import Careal_logo from "../assets/images/Careal_logo.jpeg";
 import './Footer.css';
 
 function Footer() {
@@ -42,7 +42,7 @@ function Footer() {
           <div className="footer-logo">
             <Link to="/" className="social-logo">
               CAREAL
-              <img src={img5} alt="Careal logo" style={{ width: 28, height: 28 }} />
+              <img src={Careal_logo} alt="Careal logo" style={{ width: 40, height: 40 }} />
             </Link>
           </div>
 

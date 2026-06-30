@@ -82,7 +82,7 @@
 }
 .footer-logo .social-logo:hover { color: #fff; }
 .footer-logo img {
-  border-radius: 8px;
+  border-radius: 50%;
   border: 1px solid rgba(124, 58, 237, 0.35);
   display: block;
 }

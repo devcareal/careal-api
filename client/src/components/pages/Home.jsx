@@ -1,4 +1,4 @@
-// Home.jsx — with auto-sliding hero
+// Home.jsx — with auto-sliding hero and Accordion FAQ
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
@@ -28,7 +28,7 @@ const SLIDES = [
     eyebrow: "Fast · Secure · Verified",
     heading: "Skip the Queue,",
     accent:  "Stay Road-Legal",
-    sub:     "Our certified agents handle all your vehicle paperwork so you never have to visit a government office again.",
+    sub:     "Renew vehicle papers. Insurance & roadworthiness",
   },
   {
     overlay: "linear-gradient(135deg, rgba(30,5,10,0.84) 0%, rgba(100,20,40,0.68) 60%, rgba(30,5,10,0.82) 100%)",
@@ -58,10 +58,33 @@ const STATS = [
   { num: "24/7",  label: "Support Available" },
 ];
 
+// FAQ Data Setup
+const FAQ_DATA = [
+  {
+    q: "How long does verification take?",
+    a: "Standard verifications are processed instantly. Complex official records matching checks are finalized within 10 to 30 minutes max."
+  },
+  {
+    q: "What documents do I need to upload?",
+    a: "You only need your valid vehicle registration certificate, proof of ownership documents, or an official identification card."
+  },
+  {
+    q: "Are there any hidden fees?",
+    a: "No hidden charges whatsoever. You only pay the transparent flat rate displayed on your selected service tier card."
+  },
+  {
+    q: "Is my data secure?",
+    a: "Completely secure. All payloads and vehicle verification logs are fully protected with bank-grade AES-256 encryption standards."
+  }
+];
+
 export default function Home() {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [fading,  setFading]  = useState(false);
+  
+  // Minimal state to keep track of open accordion index
+  const [faqActive, setFaqActive] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -220,6 +243,37 @@ export default function Home() {
               <p className="step-text">{step.text}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── Accordion FAQ Section ── */}
+      <section className="home-faq-section">
+        <div className="section-header-row">
+          <div className="section-eyebrow">FAQ</div>
+          <h2 className="section-title">Frequently Asked Questions</h2>
+        </div>
+        <div className="faq-accordion-container">
+          {FAQ_DATA.map((item, index) => {
+            const isOpen = faqActive === index;
+            return (
+              <div 
+                key={index} 
+                className={`faq-accordion-item ${isOpen ? "active" : ""}`}
+              >
+                <button 
+                  type="button"
+                  className="faq-accordion-trigger" 
+                  onClick={() => setFaqActive(isOpen ? null : index)}
+                >
+                  <span>{item.q}</span>
+                  <span className="faq-icon-marker">{isOpen ? "−" : "+"}</span>
+                </button>
+                <div className="faq-accordion-content">
+                  <p>{item.a}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

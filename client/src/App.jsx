@@ -1,6 +1,7 @@
 // App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop"; // Import the utility
 import Header from "./components/Header.jsx";
 import Home from "./components/pages/Home.jsx";
 import Signup from "./components/pages/Signup";
@@ -27,6 +28,7 @@ function Layout() {
 
   return (
     <>
+      <ScrollToTop />
       {!isAppPage && <Header />}
       <Routes>
         <Route path="/"               element={<Home />} />

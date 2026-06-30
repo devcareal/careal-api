@@ -39,8 +39,19 @@ function Signup() {
     setShowPassword(false);
   }, []);
 
+  // const handleChange = (e) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    
+    // Explicitly enforce alphanumeric + hyphens uppercase sanitation for plate numbers
+    if (e.target.name === "plateNumber") {
+      value = value.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    }
+    
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleSubmit = async (e) => {
